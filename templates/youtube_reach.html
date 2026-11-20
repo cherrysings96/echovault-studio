@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Trend & Algorithmic Reach Forecaster | EchoVault</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0f111a;
+            color: #e2e8f0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        .studio-navbar {
+            background-color: #131622;
+        }
+        .studio-card {
+            background-color: #181b28;
+            border: 1px solid #2a2f45;
+            border-radius: 12px;
+        }
+        .yt-gradient {
+            background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+        }
+        .accent-gradient {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+        }
+        .progress-thin {
+            height: 6px;
+        }
+        .reach-badge {
+            font-size: 1.1rem;
+            font-weight: 700;
+            padding: 8px 14px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg border-bottom border-secondary-subtle py-3 mb-4 studio-navbar">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-white d-flex align-items-center gap-2" href="{{ url_for('index') }}">
+            <span class="px-2 py-1 rounded yt-gradient text-white">YT</span>
+            EchoVault <span class="badge bg-secondary-subtle text-secondary-emphasis fw-normal ms-2">Trend Reach & Growth Forecaster</span>
+        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-sm">← Studio Dashboard</a>
+            <button class="btn btn-danger btn-sm yt-gradient border-0" data-bs-toggle="modal" data-bs-target="#newForecastModal">+ Simulate Song Trend</button>
+        </div>
+    </div>
+</nav>
+
+<div class="container pb-5">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Top Algorithmic Reach Metrics -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="studio-card p-3">
+                <div class="text-secondary small text-uppercase fw-semibold">Forecast Models</div>
+                <div class="fs-2 fw-bold text-white">{{ stats.total_forecasts or 0 }}</div>
+                <div class="small text-secondary">Active song predictions</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="studio-card p-3">
+                <div class="text-secondary small text-uppercase fw-semibold">Avg Reach Probability</div>
+                <div class="fs-2 fw-bold text-warning">{{ stats.avg_probability or 0 }}%</div>
+                <div class="small text-secondary">Algorithm breakthrough likelihood</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="studio-card p-3">
+                <div class="text-secondary small text-uppercase fw-semibold">Projected Impressions</div>
+                <div class="fs-2 fw-bold text-info">{{ "{:,}".format(stats.total_projected_impressions or 0) }}</div>
+                <div class="small text-secondary">Suggested feed & search traffic</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="studio-card p-3">
+                <div class="text-secondary small text-uppercase fw-semibold">Expected CTR</div>
+                <div class="fs-2 fw-bold text-success">{{ stats.avg_projected_ctr or 0 }}%</div>
+                <div class="small text-secondary">Target thumbnail click rate</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Reach Predictions -->
+    <h5 class="fw-bold mb-3">Audience Breakthrough Predictions</h5>
+    <div class="row g-3 mb-5">
+        {% for a in analyses %}
+        <div class="col-md-6">
+            <div class="studio-card p-4 h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge {% if a.reach_probability >= 85 %}bg-success{% elif a.reach_probability >= 70 %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                            {{ a.trend_tier }}
+                        </span>
+                        <span class="text-secondary small">Predicted CTR: <strong class="text-light">{{ a.predicted_ctr }}%</strong></span>
+                    </div>
+
+                    <h5 class="fw-bold text-white mb-1">{{ a.project_title }}</h5>
+                    <p class="text-secondary small mb-3">Artist: {{ a.original_artist }} • Transposition: {{ a.transposed_key }}</p>
+
+                    <div class="p-3 rounded bg-dark mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small text-secondary">Reach Breakthrough Probability:</span>
+                            <span class="reach-badge {% if a.reach_probability >= 85 %}bg-success-subtle text-success{% else %}bg-warning-subtle text-warning{% endif %}">
+                                {{ a.reach_probability }}%
+                            </span>
+                        </div>
+                        <div class="progress progress-thin mb-3">
+                            <div class="progress-bar yt-gradient" data-width="{{ a.reach_probability }}"></div>
+                        </div>
+
+                        <div class="row g-2 text-center small">
+                            <div class="col-4 border-end border-secondary-subtle">
+                                <div class="text-secondary">Est. Impressions</div>
+                                <div class="fw-bold text-white">{{ "{:,}".format(a.estimated_impressions) }}</div>
+                            </div>
+                            <div class="col-4 border-end border-secondary-subtle">
+                                <div class="text-secondary">Competition</div>
+                                <div class="fw-bold text-info">{{ a.competition_level.split()[0] }}</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-secondary">Vocal Quality</div>
+                                <div class="fw-bold text-success">{{ a.live_readiness or 80.0 }}%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="small mb-2">
+                        <span class="text-secondary">Arrangement Hook:</span>
+                        <span class="text-light fw-semibold ms-1">{{ a.arrangement_style }}</span>
+                    </div>
+                    <div class="small">
+                        <span class="text-secondary">Recommended Tags:</span>
+                        <span class="font-monospace text-info small ms-1">{{ a.recommended_tags }}</span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end align-items-center mt-3 pt-2 border-top border-secondary-subtle">
+                    <form action="{{ url_for('delete_forecast', forecast_id=a.id) }}" method="POST">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove Forecast</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="studio-card p-4 text-center text-secondary">
+                No YouTube reach forecasts generated yet. Click <strong>+ Simulate Song Trend</strong> above to evaluate a song!
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Algorithmic Model Breakdown -->
+    <div class="studio-card p-4">
+        <h5 class="fw-bold text-white mb-2">How the EchoVault YouTube Reach Algorithm Works</h5>
+        <p class="text-secondary small mb-3">
+            Cover songs on YouTube succeed through a balance of search demand and audience retention. EchoVault calculates the reach probability across four weighted vectors:
+        </p>
+        <div class="row g-3 small">
+            <div class="col-md-3">
+                <div class="p-3 bg-dark rounded h-100">
+                    <div class="fw-bold text-danger mb-1">1. Trend Velocity (35%)</div>
+                    <p class="text-secondary mb-0">Measures breakout velocity versus evergreen search intent across regional audio trends.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 bg-dark rounded h-100">
+                    <div class="fw-bold text-warning mb-1">2. Arrangement Novelty (25%)</div>
+                    <p class="text-secondary mb-0">Stripped acoustic, cinematic, or unique piano re-arrangements retain watch-time longer than 1:1 replica backing tracks.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 bg-dark rounded h-100">
+                    <div class="fw-bold text-info mb-1">3. Saturation Index (20%)</div>
+                    <p class="text-secondary mb-0">Applies an algorithmic penalty if high competition crowds out organic recommendations.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 bg-dark rounded h-100">
+                    <div class="fw-bold text-success mb-1">4. Live Mix-Readiness (20%)</div>
+                    <p class="text-secondary mb-0">Directly queries your studio SQLite takes table—higher pitch and vibe ratings increase viral retention.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: New Forecast -->
+<div class="modal fade" id="newForecastModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="{{ url_for('add_forecast') }}" method="POST" class="modal-content studio-card">
+            <div class="modal-header border-secondary-subtle">
+                <h5 class="modal-title fw-bold">Simulate YouTube Algorithmic Reach</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label small">Select Studio Song Project</label>
+                    <select name="project_id" class="form-select" required>
+                        {% for p in projects %}
+                        <option value="{{ p.id }}">{{ p.title }} (Avg Take Score: {{ p.avg_readiness }}%)</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small">Song Trend Velocity</label>
+                    <select name="trend_tier" class="form-select">
+                        <option value="Viral Surge">Viral Surge (Trending Audio on Reels / Shorts)</option>
+                        <option value="Trending Breakout">Trending Breakout (Rising Charts)</option>
+                        <option value="Evergreen High Velocity" selected>Evergreen High Velocity (Consistent Search Demand)</option>
+                        <option value="Niche / Cult Classic">Niche / Cult Classic (Specific Engaged Audience)</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small">Cover Arrangement Style</label>
+                    <select name="arrangement_style" class="form-select">
+                        <option value="Stripped Acoustic / Piano" selected>Stripped Acoustic / Piano (High Emotional Retention)</option>
+                        <option value="Cinematic Orchestral">Cinematic Orchestral (Dramatic Build)</option>
+                        <option value="Lo-Fi R&B Re-harmonization">Lo-Fi R&B Re-harmonization (Chill Niche)</option>
+                        <option value="Raw 1-Take Live Vocal">Raw 1-Take Live Vocal (Authentic Engagement)</option>
+                        <option value="Upbeat Indie Pop">Upbeat Indie Pop</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small">YouTube Cover Saturation / Competition</label>
+                    <select name="competition_level" class="form-select">
+                        <option value="Low (Undersaturated Cover Niche)">Low (Undersaturated Cover Niche)</option>
+                        <option value="Medium" selected>Medium (Moderate Existing Covers)</option>
+                        <option value="High">High (Heavily Covered / Crowded)</option>
+                    </select>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label small">Custom Metadata Tags (Optional)</label>
+                    <input type="text" name="recommended_tags" class="form-control" placeholder="#vocalcover #acoustic #youtubemusic">
+                </div>
+            </div>
+            <div class="modal-footer border-secondary-subtle">
+                <button type="submit" class="btn btn-danger yt-gradient border-0 w-100">Calculate Reach & Forecast Impressions</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.querySelectorAll('.progress-bar[data-width]').forEach(function(bar) {
+        bar.style.width = bar.getAttribute('data-width') + '%';
+    });
+</script>
+</body>
+</html>
